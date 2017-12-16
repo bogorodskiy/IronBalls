@@ -17,8 +17,10 @@ class IRONBALLS_API ABallAIController : public AAIController
 	
 public:
 	ABallPawn* GetControlledBall() const;
+
+private:
 	virtual void BeginPlay() override;
-	
+	ABallPawn* GetPlayerBall() const;
 	
 	
 };
