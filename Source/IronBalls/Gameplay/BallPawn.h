@@ -6,6 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "BallPawn.generated.h"
 
+class UBallAimingComponent;
+class UBallMovementComponent;
+
 UCLASS()
 class IRONBALLS_API ABallPawn : public APawn
 {
@@ -15,11 +18,23 @@ public:
 	// Sets default values for this pawn's properties
 	ABallPawn();
 
-protected:
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void initBallAimingComponent(UBallAimingComponent* value);
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	UBallAimingComponent* GetBallAimingComponent() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void initBallMovementComponent(UBallMovementComponent* value);
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	UBallMovementComponent* GetBallMovementComponent() const;
+
+private:
+	UBallAimingComponent* BallAimingComponent = nullptr;
+	UBallMovementComponent* BallMovementComponent = nullptr;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

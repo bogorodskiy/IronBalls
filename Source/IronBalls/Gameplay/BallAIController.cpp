@@ -3,11 +3,13 @@
 #include "BallAIController.h"
 #include "Engine/World.h"
 
-ABallPawn* ABallAIController::GetControlledBall() const {
+ABallPawn* ABallAIController::GetControlledBall() const 
+{
 	return Cast<ABallPawn>(GetPawn());
 }
 
-void ABallAIController::BeginPlay() {
+void ABallAIController::BeginPlay() 
+{
 	Super::BeginPlay();
 	
 	auto Ball = GetControlledBall();

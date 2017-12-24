@@ -20,17 +20,39 @@ public:
 	UPROPERTY(EditAnywhere)
 	float LineTraceRange = 1000000.0f; // 10km in cm
 
-	ABallPawn* GetControlledBall() const;
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void SetCrosshairPosition(float AnchorX, float AnchorY);
+
+	virtual void Possess(APawn* PawnToPossess) override;
+	virtual void UnPossess() override;
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+	virtual void Tick(float DeltaSeconds) override;
+
 private:
+	enum class MoveInputId {UP, RIGHT, DOWN, LEFT};
+
 	float CrosshairAnchorX = 0.0f;
 	float CrosshairAnchorY = 0.0f;
 
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaSeconds) override;
+	ABallPawn* ControlledBall = nullptr;
 
 	void AimTowardsCrosshair();
 	bool GetSightRayHitLocation(FVector& OutHitLocation) const;
 	bool GetLookHitLocation(FVector StartLocation, FVector LookDirection, FVector& OutHitLocation) const;
+
+	void OnMoveInputUpPressed();
+	void OnMoveInputUpReleased();
+	void OnMoveInputRightPressed();
+	void OnMoveInputRightReleased();
+	void OnMoveInputDownPressed();
+	void OnMoveInputDownReleased();
+	void OnMoveInputLeftPressed();
+	void OnMoveInputLeftReleased();
+	void ProcessMoveInput(MoveInputId Id, bool Pressed);
+
+	void OnAimAzimuth(float AxisValue);
+	void OnAimElevation(float AxisValue);
 };
