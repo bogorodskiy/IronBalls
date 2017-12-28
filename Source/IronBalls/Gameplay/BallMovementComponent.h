@@ -17,14 +17,13 @@ public:
 	// Sets default values for this component's properties
 	UBallMovementComponent();
 
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	void StartApplyForce(FVector value);
-
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void StartApplyForce(const FVector& ForceDirection);
 	void EndApplyForce();
 
 private:
 	UPrimitiveComponent * BallRoot = nullptr;
+	FVector AppliedForceDirection = {0.0f, 0.0f, 0.0f};
+	UPrimitiveComponent* BallRootComponent = nullptr;
 
 	// Called when the game starts
 	virtual void BeginPlay() override;

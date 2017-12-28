@@ -118,51 +118,75 @@ bool ABallPlayerController::GetLookHitLocation(FVector StartLocation, FVector Lo
 
 void ABallPlayerController::OnMoveInputUpPressed()
 {
-	ProcessMoveInput(MoveInputId::UP, true);
+	KeyboardMoveDirection += FVector{0.0f, 1.0f, 0.0f};
+	ProcessMoveInput(KeyboardMoveDirection, true);
 }
 void ABallPlayerController::OnMoveInputUpReleased()
 {
-	ProcessMoveInput(MoveInputId::UP, false);
+	KeyboardMoveDirection -= FVector{ 0.0f, 1.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, false);
 }
 void ABallPlayerController::OnMoveInputRightPressed()
 {
-	ProcessMoveInput(MoveInputId::RIGHT, true);
+	KeyboardMoveDirection += FVector{ 1.0f, 0.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, true);
 }
 void ABallPlayerController::OnMoveInputRightReleased()
 {
-	ProcessMoveInput(MoveInputId::RIGHT, false);
+	KeyboardMoveDirection -= FVector{ 1.0f, 0.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, false);
 }
 void ABallPlayerController::OnMoveInputDownPressed()
 {
-	ProcessMoveInput(MoveInputId::DOWN, true);
+	KeyboardMoveDirection += FVector{ 0.0f, -1.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, true);
 }
 void ABallPlayerController::OnMoveInputDownReleased()
 {
-	ProcessMoveInput(MoveInputId::DOWN, false);
+	KeyboardMoveDirection -= FVector{ 0.0f, -1.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, false);
 }
 void ABallPlayerController::OnMoveInputLeftPressed()
 {
-	ProcessMoveInput(MoveInputId::LEFT, true);
+	KeyboardMoveDirection += FVector{ -1.0f, 0.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, true);
 }
 void ABallPlayerController::OnMoveInputLeftReleased()
 {
-	ProcessMoveInput(MoveInputId::LEFT, false);
+	KeyboardMoveDirection -= FVector{ -1.0f, 0.0f, 0.0f };
+	ProcessMoveInput(KeyboardMoveDirection, false);
 }
 
-void ABallPlayerController::ProcessMoveInput(MoveInputId Id, bool Pressed)
+void ABallPlayerController::ProcessMoveInput(const FVector& MoveDirection, bool Pressed)
 {
 	if (ControlledBall != nullptr)
-	{
+	{	
 		auto MovementComponent = ControlledBall->GetBallMovementComponent();
-		auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
-		auto Multiplicator = 5.0f;
-		auto MoveVector = FVector{ Multiplicator * FMath::Cos(FMath::DegreesToRadians(CameraYaw)), Multiplicator * FMath::Sin(FMath::DegreesToRadians(CameraYaw)), 0.0f };
-		
 		if (Pressed)
 		{
-			MovementComponent->StartApplyForce(MoveVector);
+			UE_LOG(LogTemp, Warning, TEXT("KEYBOARD MOVE DIRECTION %s"), *MoveDirection.ToString());
+			auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
+			//UE_LOG(LogTemp, Warning, TEXT("CameraYaw %f"), CameraYaw);
+			static FVector LookDirection;
+			LookDirection.X = FMath::Cos(FMath::DegreesToRadians(CameraYaw));
+			LookDirection.Y = FMath::Sin(FMath::DegreesToRadians(CameraYaw));
+			LookDirection.Normalize();
+
+			static auto MoveDirectionUp = FVector{ 0.0f, 1.0f, 0.0f };
+			auto DotProduct = MoveDirection | MoveDirectionUp;
+			auto Determinant = MoveDirection.X * MoveDirectionUp.Y - MoveDirection.Y * MoveDirectionUp.X;
+			auto DetAngleRads = FMath::Atan2(Determinant, DotProduct);
+			auto DetSin = FMath::Sin(DetAngleRads);
+			auto DetCos = FMath::Cos(DetAngleRads);
+			static FVector ForceDirection{ 0.0f };
+			ForceDirection.X = LookDirection.X * DetCos - LookDirection.Y * DetSin;
+			ForceDirection.Y = LookDirection.X * DetSin + LookDirection.Y * DetCos;
+			ForceDirection.Normalize();
+
+			MovementComponent->StartApplyForce(ForceDirection);
 		}
-		else {
+		else 
+		{
 			MovementComponent->EndApplyForce();
 		}
 	}
@@ -172,7 +196,11 @@ void ABallPlayerController::OnAimAzimuth(float AxisValue)
 {
 	if (AxisValue != 0.0f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("-=OnAimAzimuth: %f=-"), AxisValue);
+		auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
+		static FVector LookDirection;
+		LookDirection.X = FMath::Cos(FMath::DegreesToRadians(CameraYaw));
+		LookDirection.Y = FMath::Sin(FMath::DegreesToRadians(CameraYaw));
+		//UE_LOG(LogTemp, Warning, TEXT("Look direction: %s"), *LookDirection.ToString());
 	}
 }
 
@@ -180,6 +208,6 @@ void ABallPlayerController::OnAimElevation(float AxisValue)
 {
 	if (AxisValue != 0.0f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("-=OnAimElevation: %f=-"), AxisValue);
+		//UE_LOG(LogTemp, Warning, TEXT("-=OnAimElevation: %f=-"), AxisValue);
 	}
 }

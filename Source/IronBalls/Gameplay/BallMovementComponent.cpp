@@ -12,36 +12,42 @@ UBallMovementComponent::UBallMovementComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UBallMovementComponent::StartApplyForce(FVector value)
+void UBallMovementComponent::StartApplyForce(const FVector& ForceDirection)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start apply force %s"), *value.ToString());
-	auto BallPawn = Cast<ABallPawn>(GetOwner());
-	if (BallPawn != nullptr)
-	{
-		BallRoot = Cast<UPrimitiveComponent>(BallPawn->GetRootComponent());
-		UE_LOG(LogTemp, Warning, TEXT("Move component owner = "), *BallPawn->GetName());
-		BallRoot->AddForceAtLocation(value * 10000, BallPawn->GetTargetLocation());
-	}
+	AppliedForceDirection = ForceDirection;
 }
 
 void UBallMovementComponent::EndApplyForce()
 {
-	UE_LOG(LogTemp, Warning, TEXT("End apply force"));
-	if (BallRoot != nullptr)
-	{
-	
-	}
-
+	AppliedForceDirection = {0.0f, 0.0f, 0.0f};
 }
 
 void UBallMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	auto BallPawn = Cast<ABallPawn>(GetOwner());
+	if (BallPawn != nullptr)
+	{
+		BallRootComponent = Cast<UPrimitiveComponent>(BallPawn->GetRootComponent());
+		if (BallRootComponent != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BALL ROOT COMPONENT ACQUIRED"));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("BALL ROOT COMPONENT IS NOT AVAILABLE"));
+		}
+	}
 }
 
 void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (BallRootComponent != nullptr && AppliedForceDirection.Size() > 0)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("MOVE DIRECTION %s"), *AppliedForceDirection.ToString());
+		static const auto ForceMultiplicator = 10000;
+		BallRootComponent->AddForceAtLocation(AppliedForceDirection * ForceMultiplicator, BallRootComponent->GetOwner()->GetTargetLocation());
+	}
 }
 
