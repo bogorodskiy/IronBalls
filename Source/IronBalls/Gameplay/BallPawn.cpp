@@ -3,6 +3,8 @@
 #include "BallPawn.h"
 #include "BallAimingComponent.h"
 #include "BallMovementComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Materials/MaterialInterface.h"
 
 ABallPawn::ABallPawn()
 {
@@ -40,9 +42,25 @@ void ABallPawn::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ABallPawn::SetIsBlockingPlayerSight(bool Value)
+{
+	if (IsBlockingPlayerSight != Value)
+	{
+		IsBlockingPlayerSight = Value;
+		IsChangingAlpha = true;
+	}
+}
+
 void ABallPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (IsChangingAlpha)
+	{
+		auto Delta = IsBlockingPlayerSight ? -1.0f : 1.0f;
+		auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+		// TODO set opacity
+		//RootComponent->GetMaterial()->Opacity
+	}
 }
 
 void ABallPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -32,11 +32,13 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
+	bool InputMoveChanged = false;
+
 	float CrosshairAnchorX = 0.0f;
 	float CrosshairAnchorY = 0.0f;
 
 	ABallPawn* ControlledBall = nullptr;
-	FVector KeyboardMoveDirection = {0.0f, 0.0f, 0.0f};
+	FVector InputMoveDirection = {0.0f, 0.0f, 0.0f};
 
 	void AimTowardsCrosshair();
 	bool GetSightRayHitLocation(FVector& OutHitLocation) const;
@@ -50,7 +52,7 @@ private:
 	void OnMoveInputDownReleased();
 	void OnMoveInputLeftPressed();
 	void OnMoveInputLeftReleased();
-	void ProcessMoveInput(const FVector& MoveDirection, bool Pressed);
+	void ProcessInputMove();
 
 	void OnAimAzimuth(float AxisValue);
 	void OnAimElevation(float AxisValue);

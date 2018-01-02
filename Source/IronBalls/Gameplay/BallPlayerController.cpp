@@ -20,11 +20,18 @@ void ABallPlayerController::Possess(APawn* PawnToPossess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Ball player controller possessed unknown pawn"));
 	}
+	// TODO: move value to BP
+	ControlledBall->GetBallMovementComponent()->SetInactiveLinearDamping(10.0f);
 }
 
 void ABallPlayerController::UnPossess()
 {
 	Super::UnPossess();
+	if (ControlledBall != nullptr)
+	{
+		// TODO: move value to BP
+		ControlledBall->GetBallMovementComponent()->SetInactiveLinearDamping(0.0f);
+	}
 	ControlledBall = nullptr;
 }
 
@@ -58,6 +65,11 @@ void ABallPlayerController::Tick(float DeltaSeconds)
 
 	// TODO: only if in battle mode
 	AimTowardsCrosshair();
+	if (InputMoveChanged)
+	{
+		InputMoveChanged = false;
+		ProcessInputMove();
+	}
 }
 
 void ABallPlayerController::AimTowardsCrosshair() 
@@ -118,88 +130,86 @@ bool ABallPlayerController::GetLookHitLocation(FVector StartLocation, FVector Lo
 
 void ABallPlayerController::OnMoveInputUpPressed()
 {
-	KeyboardMoveDirection += FVector{0.0f, 1.0f, 0.0f};
-	ProcessMoveInput(KeyboardMoveDirection, true);
+	InputMoveDirection += FVector{0.0f, 1.0f, 0.0f};
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputUpReleased()
 {
-	KeyboardMoveDirection -= FVector{ 0.0f, 1.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, false);
+	InputMoveDirection -= FVector{ 0.0f, 1.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputRightPressed()
 {
-	KeyboardMoveDirection += FVector{ 1.0f, 0.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, true);
+	InputMoveDirection += FVector{ 1.0f, 0.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputRightReleased()
 {
-	KeyboardMoveDirection -= FVector{ 1.0f, 0.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, false);
+	InputMoveDirection -= FVector{ 1.0f, 0.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputDownPressed()
 {
-	KeyboardMoveDirection += FVector{ 0.0f, -1.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, true);
+	InputMoveDirection += FVector{ 0.0f, -1.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputDownReleased()
 {
-	KeyboardMoveDirection -= FVector{ 0.0f, -1.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, false);
+	InputMoveDirection -= FVector{ 0.0f, -1.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputLeftPressed()
 {
-	KeyboardMoveDirection += FVector{ -1.0f, 0.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, true);
+	InputMoveDirection += FVector{ -1.0f, 0.0f, 0.0f };
+	InputMoveChanged = true;
 }
 void ABallPlayerController::OnMoveInputLeftReleased()
 {
-	KeyboardMoveDirection -= FVector{ -1.0f, 0.0f, 0.0f };
-	ProcessMoveInput(KeyboardMoveDirection, false);
+	InputMoveDirection -= FVector{ -1.0f, 0.0f, 0.0f };
+	InputMoveChanged = true;
 }
-
-void ABallPlayerController::ProcessMoveInput(const FVector& MoveDirection, bool Pressed)
+	
+void ABallPlayerController::ProcessInputMove()
 {
-	if (ControlledBall != nullptr)
-	{	
-		auto MovementComponent = ControlledBall->GetBallMovementComponent();
-		if (Pressed)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("KEYBOARD MOVE DIRECTION %s"), *MoveDirection.ToString());
-			auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
-			//UE_LOG(LogTemp, Warning, TEXT("CameraYaw %f"), CameraYaw);
-			static FVector LookDirection;
-			LookDirection.X = FMath::Cos(FMath::DegreesToRadians(CameraYaw));
-			LookDirection.Y = FMath::Sin(FMath::DegreesToRadians(CameraYaw));
-			LookDirection.Normalize();
-
-			static auto MoveDirectionUp = FVector{ 0.0f, 1.0f, 0.0f };
-			auto DotProduct = MoveDirection | MoveDirectionUp;
-			auto Determinant = MoveDirection.X * MoveDirectionUp.Y - MoveDirection.Y * MoveDirectionUp.X;
-			auto DetAngleRads = FMath::Atan2(Determinant, DotProduct);
-			auto DetSin = FMath::Sin(DetAngleRads);
-			auto DetCos = FMath::Cos(DetAngleRads);
-			static FVector ForceDirection{ 0.0f };
-			ForceDirection.X = LookDirection.X * DetCos - LookDirection.Y * DetSin;
-			ForceDirection.Y = LookDirection.X * DetSin + LookDirection.Y * DetCos;
-			ForceDirection.Normalize();
-
-			MovementComponent->StartApplyForce(ForceDirection);
-		}
-		else 
-		{
-			MovementComponent->EndApplyForce();
-		}
+	if (ControlledBall == nullptr)
+	{
+		return;
 	}
+
+	auto MovementComponent = ControlledBall->GetBallMovementComponent();
+	static FVector MoveDirection{ 0.0f };
+	MoveDirection = {0.0f, 0.0f, 0.0f};
+	//UE_LOG(LogTemp, Warning, TEXT("KEYBOARD MOVE DIRECTION %s"), *InputMoveDirection.ToString());
+	if (InputMoveDirection.SizeSquared() > 0.0f)
+	{
+		auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
+		//UE_LOG(LogTemp, Warning, TEXT("CameraYaw %f"), CameraYaw);
+		static FVector LookDirection;
+		FMath::SinCos(&LookDirection.Y, &LookDirection.X, FMath::DegreesToRadians(CameraYaw));
+		LookDirection.Normalize();
+
+		static const auto InputDirectionUp = FVector{ 0.0f, 1.0f, 0.0f };
+		auto DotProduct = InputMoveDirection | InputDirectionUp;
+		auto Determinant = InputMoveDirection.X * InputDirectionUp.Y - InputMoveDirection.Y * InputDirectionUp.X;
+		auto DetAngleRads = FMath::Atan2(Determinant, DotProduct);
+		auto DetSin = 0.0f;
+		auto DetCos = 0.0f;
+		FMath::SinCos(&DetSin, &DetCos, DetAngleRads);
+
+		MoveDirection.X = LookDirection.X * DetCos - LookDirection.Y * DetSin;
+		MoveDirection.Y = LookDirection.X * DetSin + LookDirection.Y * DetCos;
+		MoveDirection.Normalize();
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("FORCE DIRECTION %s \n"), *MoveDirection.ToString());
+	MovementComponent->SetMoveDirection(MoveDirection);
 }
 
 void ABallPlayerController::OnAimAzimuth(float AxisValue)
 {
 	if (AxisValue != 0.0f)
 	{
-		auto CameraYaw = PlayerCameraManager->GetCameraRotation().Yaw;
-		static FVector LookDirection;
-		LookDirection.X = FMath::Cos(FMath::DegreesToRadians(CameraYaw));
-		LookDirection.Y = FMath::Sin(FMath::DegreesToRadians(CameraYaw));
+		InputMoveChanged = true;
 		//UE_LOG(LogTemp, Warning, TEXT("Look direction: %s"), *LookDirection.ToString());
 	}
 }

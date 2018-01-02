@@ -28,7 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	UBallMovementComponent* GetBallMovementComponent() const;
 
+	void SetIsBlockingPlayerSight(bool Value);
 private:
+	bool IsBlockingPlayerSight = false;
+	bool IsChangingAlpha = false;
 	UBallAimingComponent* BallAimingComponent = nullptr;
 	UBallMovementComponent* BallMovementComponent = nullptr;
 

@@ -17,17 +17,23 @@ public:
 	// Sets default values for this component's properties
 	UBallMovementComponent();
 
-	void StartApplyForce(const FVector& ForceDirection);
-	void EndApplyForce();
+	void SetMoveDirection(const FVector& Value);
+	void SetInactiveLinearDamping(float Value);
 
 private:
-	UPrimitiveComponent * BallRoot = nullptr;
-	FVector AppliedForceDirection = {0.0f, 0.0f, 0.0f};
+	bool IsPlaying = false;
+	bool HasForceApplied = false;
+	UPROPERTY(EditAnywhere)
+	float MaxVelocity = 5.0f; // cm/s
+	UPROPERTY(EditAnywhere)
+	float Acceleration = 2000.0f; // cm/s2
+	float InactiveLinearDamping = 0.0f;
+	UPrimitiveComponent* BallRoot = nullptr;
 	UPrimitiveComponent* BallRootComponent = nullptr;
+	FVector MoveDirection = { 0.0f, 0.0f, 0.0f };
 
-	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };
