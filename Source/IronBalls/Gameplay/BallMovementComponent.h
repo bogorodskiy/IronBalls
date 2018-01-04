@@ -18,7 +18,7 @@ public:
 	UBallMovementComponent();
 
 	void SetMoveDirection(const FVector& Value);
-	void SetInactiveLinearDamping(float Value);
+	void SetAngularDamping(float Value);
 
 private:
 	bool IsPlaying = false;
@@ -27,13 +27,14 @@ private:
 	float MaxVelocity = 5.0f; // cm/s
 	UPROPERTY(EditAnywhere)
 	float Acceleration = 2000.0f; // cm/s2
-	float InactiveLinearDamping = 0.0f;
+	float AngularDamping = 0.0f;
 	UPrimitiveComponent* BallRoot = nullptr;
 	UPrimitiveComponent* BallRootComponent = nullptr;
 	FVector MoveDirection = { 0.0f, 0.0f, 0.0f };
 
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void updateAngularDamping();
 };

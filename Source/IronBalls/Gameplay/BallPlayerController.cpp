@@ -1,10 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "BallPawn.h"
 #include "BallPlayerController.h"
-#include "BallAimingComponent.h"
 #include "BallMovementComponent.h"
 #include "Engine/World.h"
 #include "Runtime/Engine/Classes/Camera/PlayerCameraManager.h"
+
+// TODO: delete aiming component
 
 void ABallPlayerController::SetCrosshairPosition(float AnchorX, float AnchorY)
 {
@@ -20,8 +22,7 @@ void ABallPlayerController::Possess(APawn* PawnToPossess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Ball player controller possessed unknown pawn"));
 	}
-	// TODO: move value to BP
-	ControlledBall->GetBallMovementComponent()->SetInactiveLinearDamping(10.0f);
+	ControlledBall->GetBallMovementComponent()->SetAngularDamping(PossessedAngularDamping);
 }
 
 void ABallPlayerController::UnPossess()
@@ -29,8 +30,7 @@ void ABallPlayerController::UnPossess()
 	Super::UnPossess();
 	if (ControlledBall != nullptr)
 	{
-		// TODO: move value to BP
-		ControlledBall->GetBallMovementComponent()->SetInactiveLinearDamping(0.0f);
+		ControlledBall->GetBallMovementComponent()->SetAngularDamping(0.0f);
 	}
 	ControlledBall = nullptr;
 }
@@ -78,19 +78,7 @@ void ABallPlayerController::AimTowardsCrosshair()
 	{
 		return;
 	}
-	auto AimingComponent = ControlledBall->GetBallAimingComponent();
-	if (AimingComponent != nullptr)
-	{
-		FVector HitLocation;
-		if (GetSightRayHitLocation(HitLocation))
-		{
-			AimingComponent->AimAt(HitLocation);
-		}
-	}
-}
 
-bool ABallPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) const 
-{
 	static int32 ViewportSizeX = 0;
 	static int32 ViewportSizeY = 0;
 	GetViewportSize(ViewportSizeX, ViewportSizeY);
@@ -101,28 +89,42 @@ bool ABallPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) cons
 	static FVector CameraLookDirection{ 0.0f };
 
 	auto DeprojectSuccessfull = DeprojectScreenPositionToWorld(CrosshairPositionX, CrosshairPositionY, CameraWorldLocation, CameraLookDirection);
-	if (!DeprojectSuccessfull) 
+	if (!DeprojectSuccessfull)
 	{
-		return false;
+		return;
 	}
 
-	if (GetLookHitLocation(CameraWorldLocation, CameraLookDirection, OutHitLocation)) 
+	UE_LOG(LogTemp, Warning, TEXT("------------------------------------"));
+
+	static FHitResult HitResult;
+	if (GetLookHitResult(CameraWorldLocation, CameraLookDirection, HitResult))
 	{
-		return true;
+		auto HitBall = Cast<ABallPawn>(HitResult.Actor.Get());
+		if (HitBall != nullptr)
+		{
+			// TODO: check if not me
+			if (!AimedAtEnemy)
+			{
+				AimedAtEnemy = true;
+				AimEnemy(true);
+			}
+			return;
+		}
 	}
 
-	return false;
+	if (AimedAtEnemy)
+	{
+		AimedAtEnemy = false;
+		AimEnemy(false);
+	}
 }
 
-bool ABallPlayerController::GetLookHitLocation(FVector StartLocation, FVector LookDirection, FVector& OutHitLocation) const 
+bool ABallPlayerController::GetLookHitResult(FVector StartLocation, FVector LookDirection, FHitResult& OutHitResult) const
 {
 	auto RangeVector = LookDirection * LineTraceRange;
-	static FHitResult HitResult;
-	
-	auto GotHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, (StartLocation + RangeVector), ECC_Visibility);
-	if (GotHit) 
+	auto GotHit = GetWorld()->LineTraceSingleByChannel(OutHitResult, StartLocation, (StartLocation + RangeVector), ECC_Visibility);
+	if (GotHit)
 	{
-		OutHitLocation = HitResult.Location;
 		return true;
 	}
 	return false;
@@ -210,7 +212,6 @@ void ABallPlayerController::OnAimAzimuth(float AxisValue)
 	if (AxisValue != 0.0f)
 	{
 		InputMoveChanged = true;
-		//UE_LOG(LogTemp, Warning, TEXT("Look direction: %s"), *LookDirection.ToString());
 	}
 }
 
@@ -221,3 +222,8 @@ void ABallPlayerController::OnAimElevation(float AxisValue)
 		//UE_LOG(LogTemp, Warning, TEXT("-=OnAimElevation: %f=-"), AxisValue);
 	}
 }
+
+//void ABallPlayerController::AimEnemy(bool HasEnemy)
+//{
+//
+//}

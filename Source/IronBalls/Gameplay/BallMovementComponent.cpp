@@ -18,15 +18,13 @@ void UBallMovementComponent::SetMoveDirection(const FVector& Value)
 {
 	MoveDirection = Value;
 	HasForceApplied = (MoveDirection.SizeSquared() > 0);
+	updateAngularDamping();
 }
 
-void UBallMovementComponent::SetInactiveLinearDamping(float Value)
+void UBallMovementComponent::SetAngularDamping(float Value)
 {
-	InactiveLinearDamping = Value;
-	if (IsPlaying && BallRootComponent != nullptr)
-	{
-		BallRootComponent->SetLinearDamping(InactiveLinearDamping);
-	}
+	AngularDamping = Value;
+	updateAngularDamping();
 }
 
 void UBallMovementComponent::BeginPlay()
@@ -38,7 +36,7 @@ void UBallMovementComponent::BeginPlay()
 		BallRootComponent = Cast<UPrimitiveComponent>(BallPawn->GetRootComponent());
 		if (BallRootComponent != nullptr)
 		{
-			BallRootComponent->SetLinearDamping(InactiveLinearDamping);
+			updateAngularDamping();
 			UE_LOG(LogTemp, Warning, TEXT("BALL ROOT COMPONENT ACQUIRED"));
 		}
 		else {
@@ -78,10 +76,9 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		BallRootComponent->AddImpulse(BallRootComponent->GetMass() * AccelerationVelocity);
 		UE_LOG(LogTemp, Warning, TEXT("Apply Impulse %s"), *(BallRootComponent->GetMass() * AccelerationVelocity).ToString());
 		UE_LOG(LogTemp, Warning, TEXT("-----------------"));
-		//BallRootComponent->GetMaterial()->GetPhysicalMaterial()->Friction
 
 		// TODO: optimize, GetSize to GetSquaredSize, if max velocity -> return
-		// FIXME: if add fixed acceleration, next velocity is still > MaxVelocity
+		// FIXME: if add validated acceleration, next velocity is still > MaxVelocity
 	}
 }
 
@@ -89,4 +86,13 @@ void UBallMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	IsPlaying = false;
+}
+
+void UBallMovementComponent::updateAngularDamping()
+{
+	if (IsPlaying && BallRootComponent != nullptr)
+	{
+		auto NextAngularDamping = HasForceApplied ? 0.0f : AngularDamping;
+		BallRootComponent->SetAngularDamping(NextAngularDamping);
+	}
 }
