@@ -17,13 +17,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	float LineTraceRange = 1000000.0f; // 10km in cm
 	UPROPERTY(EditAnywhere)
-	float PossessedAngularDamping = 0.0f;
+	float PossessedAngularDamping = 10.0f;
 
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void SetCrosshairPosition(float AnchorX, float AnchorY);
 
-	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Aimed at enemy or lost"))
-	void AimEnemy(bool HasEnemy) const;
+	UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName = "Aimed at enemy or lost it"))
+	void DispatchAimEnemyEvent(bool HasEnemy);
 
 	virtual void Possess(APawn* PawnToPossess) override;
 	virtual void UnPossess() override;

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "BallPawn.h"
 #include "BallPlayerController.h"
+#include "BallPawn.h"
 #include "BallMovementComponent.h"
 #include "Engine/World.h"
 #include "Runtime/Engine/Classes/Camera/PlayerCameraManager.h"
@@ -94,19 +94,18 @@ void ABallPlayerController::AimTowardsCrosshair()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("------------------------------------"));
-
 	static FHitResult HitResult;
 	if (GetLookHitResult(CameraWorldLocation, CameraLookDirection, HitResult))
 	{
 		auto HitBall = Cast<ABallPawn>(HitResult.Actor.Get());
-		if (HitBall != nullptr)
+		if (HitBall != nullptr && HitBall != ControlledBall)
 		{
-			// TODO: check if not me
 			if (!AimedAtEnemy)
 			{
+				// TODO: Move to aim component
+				// TODO: Aim at pawn in front of me?
 				AimedAtEnemy = true;
-				AimEnemy(true);
+				this->DispatchAimEnemyEvent(true);
 			}
 			return;
 		}
@@ -115,17 +114,32 @@ void ABallPlayerController::AimTowardsCrosshair()
 	if (AimedAtEnemy)
 	{
 		AimedAtEnemy = false;
-		AimEnemy(false);
+		this->DispatchAimEnemyEvent(false);
 	}
 }
 
 bool ABallPlayerController::GetLookHitResult(FVector StartLocation, FVector LookDirection, FHitResult& OutHitResult) const
 {
 	auto RangeVector = LookDirection * LineTraceRange;
-	auto GotHit = GetWorld()->LineTraceSingleByChannel(OutHitResult, StartLocation, (StartLocation + RangeVector), ECC_Visibility);
-	if (GotHit)
+	static TArray<FHitResult> HitResults;
+	auto GotHitObjects = GetWorld()->LineTraceMultiByChannel(HitResults, StartLocation, (StartLocation + RangeVector), ECC_Pawn);
+	if (GotHitObjects)
 	{
-		return true;
+		auto HitSomething = false;
+		for (int i = HitResults.Num() - 1; i >= 0; --i)
+		{
+			auto HitResult = HitResults[i];
+			if (HitResult.Actor != ControlledBall)
+			{
+				OutHitResult = HitResult;
+				HitSomething = true;
+			}
+			else 
+			{
+				break;
+			}
+		}
+		return HitSomething;
 	}
 	return false;
 }

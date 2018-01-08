@@ -52,16 +52,16 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (BallRootComponent != nullptr && HasForceApplied)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World time = %f"), GetWorld()->TimeSeconds);
-		UE_LOG(LogTemp, Warning, TEXT("Delta time = %f"), DeltaTime);
+		//UE_LOG(LogTemp, Warning, TEXT("World time = %f"), GetWorld()->TimeSeconds);
+		//UE_LOG(LogTemp, Warning, TEXT("Delta time = %f"), DeltaTime);
 		auto CurrentLinearVelocity = BallRootComponent->GetPhysicsLinearVelocity();
-		UE_LOG(LogTemp, Warning, TEXT("SPEED = %f"), CurrentLinearVelocity.Size());
-		UE_LOG(LogTemp, Warning, TEXT("POSITION X = %f"), BallRootComponent->GetOwner()->GetActorLocation().X);
+		//UE_LOG(LogTemp, Warning, TEXT("SPEED = %f"), CurrentLinearVelocity.Size());
+		//UE_LOG(LogTemp, Warning, TEXT("POSITION X = %f"), BallRootComponent->GetOwner()->GetActorLocation().X);
 		auto CurrentAcceleration = Acceleration;
 		auto VelocityDotProduct = CurrentLinearVelocity | MoveDirection;
 		if (VelocityDotProduct < 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ADD EXTRA ACCELERATION"));
+			//UE_LOG(LogTemp, Warning, TEXT("ADD EXTRA ACCELERATION"));
 			CurrentAcceleration += Acceleration;
 		}
 		auto AccelerationVelocity = CurrentAcceleration * DeltaTime * MoveDirection;
@@ -74,8 +74,8 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("NEXT FIXED SPEED = %f"), (CurrentLinearVelocity + AccelerationVelocity).Size());
 		BallRootComponent->AddImpulse(BallRootComponent->GetMass() * AccelerationVelocity);
-		UE_LOG(LogTemp, Warning, TEXT("Apply Impulse %s"), *(BallRootComponent->GetMass() * AccelerationVelocity).ToString());
-		UE_LOG(LogTemp, Warning, TEXT("-----------------"));
+		//UE_LOG(LogTemp, Warning, TEXT("Apply Impulse %s"), *(BallRootComponent->GetMass() * AccelerationVelocity).ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("-----------------"));
 
 		// TODO: optimize, GetSize to GetSquaredSize, if max velocity -> return
 		// FIXME: if add validated acceleration, next velocity is still > MaxVelocity
